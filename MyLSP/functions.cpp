@@ -1,105 +1,105 @@
 #include "debug.h"
 #include "MyLSP.h"
 
-DWORD GetInformation()
-{
-	HKEY hKey = 0;
-	DWORD Count = 0, keyType = REG_SZ, i, j, k;
-	DWORD len = sizeof(DWORD);
-	char lpName[30], lpValue[30];
-	DWORD lpNameLen, lpValueLen;
-
-	char ipName[30], ipValue[30];
-	unsigned short portName, portValue;
-
-	lpNameLen = sizeof(lpName);
-	lpValueLen = sizeof(lpValue);
-
-	lanjie = 0;
-
-	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,"SYSTEM\\CurrentControlSet\\Control\\LSPManager",0, KEY_ALL_ACCESS, &hKey)!= ERROR_SUCCESS)
-	{
-		return 0;
-	}
-	RegQueryValueExA(hKey, "NumberOfRules", 0, &keyType, (BYTE*)&Count, &len);
-	if (Count == 0)
-	{
-		RegCloseKey(hKey);
-		return 0;
-	}
-	for (i=0; i<=Count; i++)
-	{
-		memset(lpName, 0, sizeof(lpName));
-		memset(lpValue,0, sizeof(lpValue));
-		memset(ipName,0, sizeof(ipName));
-		memset(ipValue,0, sizeof(ipValue));
-		lpNameLen = sizeof(lpName);
-		lpValueLen = sizeof(lpValue);
-		portName = portValue = 0;
-		RegEnumValueA(hKey, i, lpName, &lpNameLen, NULL, &keyType, (unsigned char*)lpValue, &lpValueLen);
-		if (strcmp(lpName, "NumberOfRules") == 0) continue;
-		k = 0;
-		for (j=0; lpName[j]!=':'; j++)
-		{
-			ipName[k++] = lpName[j];
-		}
-		j++;
-		k=0;
-		for (j; j<strlen(lpName); j++)
-		{
-			if (lpName[j] == '*')
-			{
-				portName = 0;
-				break;
-			}
-			portName = portName*10 + lpName[j] - '0';
-		}
-
-		k = 0;
-		for (j=0; lpValue[j]!=':'; j++)
-		{
-			ipValue[k++] = lpValue[j];
-		}
-		j++;
-		k=0;
-		for (j; j<strlen(lpValue); j++)
-		{
-			portValue = portValue*10 + lpValue[j] - '0';
-		}
-		if (strlen(ipName) <=5 )
-		{
-			if (portName == 0 ||  nowPort == portName)
-			{
-				lanjie = 1;
-				ChangedPort = portValue;
-				strcpy_s(ChangedIP, ipValue);
-			} else
-			{
-				lanjie = 0;
-			}
-		} else
-		{
-			if (strcmp(ipName, NowIP) == 0)
-			{
-				if (portName == 0 ||  nowPort == portName)
-				{
-					lanjie = 1;
-					ChangedPort = portValue;
-					strcpy_s(ChangedIP, ipValue);
-				} else
-				{
-					lanjie = 0;
-				}
-			} else
-			{
-				lanjie = 0;
-			}
-		}
-		if (lanjie) break;
-	}
-	RegCloseKey(hKey);
-	return 0;
-}
+//DWORD GetInformation()
+//{
+//	HKEY hKey = 0;
+//	DWORD Count = 0, keyType = REG_SZ, i, j, k;
+//	DWORD len = sizeof(DWORD);
+//	char lpName[30], lpValue[30];
+//	DWORD lpNameLen, lpValueLen;
+//
+//	char ipName[30], ipValue[30];
+//	unsigned short portName, portValue;
+//
+//	lpNameLen = sizeof(lpName);
+//	lpValueLen = sizeof(lpValue);
+//
+//	lanjie = 0;
+//
+//	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,"SYSTEM\\CurrentControlSet\\Control\\LSPManager",0, KEY_ALL_ACCESS, &hKey)!= ERROR_SUCCESS)
+//	{
+//		return 0;
+//	}
+//	RegQueryValueExA(hKey, "NumberOfRules", 0, &keyType, (BYTE*)&Count, &len);
+//	if (Count == 0)
+//	{
+//		RegCloseKey(hKey);
+//		return 0;
+//	}
+//	for (i=0; i<=Count; i++)
+//	{
+//		memset(lpName, 0, sizeof(lpName));
+//		memset(lpValue,0, sizeof(lpValue));
+//		memset(ipName,0, sizeof(ipName));
+//		memset(ipValue,0, sizeof(ipValue));
+//		lpNameLen = sizeof(lpName);
+//		lpValueLen = sizeof(lpValue);
+//		portName = portValue = 0;
+//		RegEnumValueA(hKey, i, lpName, &lpNameLen, NULL, &keyType, (unsigned char*)lpValue, &lpValueLen);
+//		if (strcmp(lpName, "NumberOfRules") == 0) continue;
+//		k = 0;
+//		for (j=0; lpName[j]!=':'; j++)
+//		{
+//			ipName[k++] = lpName[j];
+//		}
+//		j++;
+//		k=0;
+//		for (j; j<strlen(lpName); j++)
+//		{
+//			if (lpName[j] == '*')
+//			{
+//				portName = 0;
+//				break;
+//			}
+//			portName = portName*10 + lpName[j] - '0';
+//		}
+//
+//		k = 0;
+//		for (j=0; lpValue[j]!=':'; j++)
+//		{
+//			ipValue[k++] = lpValue[j];
+//		}
+//		j++;
+//		k=0;
+//		for (j; j<strlen(lpValue); j++)
+//		{
+//			portValue = portValue*10 + lpValue[j] - '0';
+//		}
+//		if (strlen(ipName) <=5 )
+//		{
+//			if (portName == 0 ||  nowPort == portName)
+//			{
+//				lanjie = 1;
+//				ChangedPort = portValue;
+//				strcpy_s(ChangedIP, ipValue);
+//			} else
+//			{
+//				lanjie = 0;
+//			}
+//		} else
+//		{
+//			if (strcmp(ipName, NowIP) == 0)
+//			{
+//				if (portName == 0 ||  nowPort == portName)
+//				{
+//					lanjie = 1;
+//					ChangedPort = portValue;
+//					strcpy_s(ChangedIP, ipValue);
+//				} else
+//				{
+//					lanjie = 0;
+//				}
+//			} else
+//			{
+//				lanjie = 0;
+//			}
+//		}
+//		if (lanjie) break;
+//	}
+//	RegCloseKey(hKey);
+//	return 0;
+//}
 
 
 SOCKET
@@ -111,8 +111,8 @@ WSPAPI  WSPAccept(
 	DWORD_PTR dwCallbackData,
 	LPINT lpErrno )
 {
-	sockaddr_in *ConnectAddress = (sockaddr_in*)addr;
-	ODS(L"WSPAccept called! ");
+	//sockaddr_in *ConnectAddress = (sockaddr_in*)addr;
+	// ODS(L"WSPAccept() Enter!");
 	return g_NextProcTable.lpWSPAccept(s, addr, addrlen, lpfnCondition, dwCallbackData, lpErrno);
 }
 
@@ -127,7 +127,7 @@ WSPAPI WSPAddressToString(
 						  LPINT lpErrno
 						  )
 {
-	ODS(L"AddressToString called! ");
+	// ODS(L"WSPAddressToString() Enter!");
 	return g_NextProcTable.lpWSPAddressToString(lpsaAddress,
 		dwAddressLength,
 		lpProtocolInfo,
@@ -145,7 +145,7 @@ WSPAPI WSPAsyncSelect(
 					  LPINT lpErrno
 					  )
 {
-	ODS(L"WSPAsyncSelect called! ");
+	// ODS(L"WSPAsyncSelect() Enter!");
 	return g_NextProcTable.lpWSPAsyncSelect(
 		s,
 		hWnd,
@@ -163,8 +163,8 @@ WSPAPI WSPBind(
 			   LPINT lpErrno
 			   )
 {
-	ODS(L"WSPBind called! ");
-	sockaddr_in *ConnectAddress = (sockaddr_in*)name;
+	// ODS(L"WSPBind() Enter!");
+	//sockaddr_in *ConnectAddress = (sockaddr_in*)name;
 	return g_NextProcTable.lpWSPBind(s, name, namelen, lpErrno);
 }
 
@@ -173,7 +173,7 @@ WSPAPI WSPCancelBlockingCall(
 							 LPINT lpErrno
 							 )
 {
-	ODS(L"WSPCancelBlockingCall called! ");
+	// ODS(L"WSPCancelBlockingCall() Enter!");
 	return g_NextProcTable.lpWSPCancelBlockingCall(
 		lpErrno);
 }
@@ -184,7 +184,7 @@ WSPAPI WSPCleanup(
 				  LPINT lpErrno
 				  )
 {
-	ODS(L"WSPCleanup called! ");
+	// ODS(L"WSPCleanup() Enter!");
 	return g_NextProcTable.lpWSPCleanup(
 		lpErrno);
 }
@@ -196,7 +196,7 @@ WSPAPI WSPCloseSocket(
 					  LPINT lpErrno
 					  )
 {
-	ODS(L"CloseSocket called! ");
+	// ODS(L"WSPCloseSocket() Enter!");
 	return g_NextProcTable.lpWSPCloseSocket(s, lpErrno);
 }
 
@@ -213,17 +213,18 @@ WSPAPI WSPConnect(
 				  LPINT lpErrno
 				  )
 {
-	WCHAR temp[1024];
+	// ODS(L"WSPConnect() Enter!");
+	/*WCHAR temp[1024];
 	sockaddr_in *ConnectAddress = (sockaddr_in*)name;
-	ODS(L"WSPConnect called! ");
+	// ODS(L"WSPConnect() Enter!");
 	_stprintf_s(temp, L"Connect to  %s:%d\n", inet_ntoa(ConnectAddress->sin_addr), ntohs(ConnectAddress->sin_port));
-	ODS(temp);
+	// ODS(temp);
 
 	strcpy_s(NowIP,inet_ntoa(ConnectAddress->sin_addr));
 	nowPort = ntohs(ConnectAddress->sin_port);
 	GetInformation();
 
-	ODS(L"After GetInformation!\n")
+	// ODS(L"After GetInformation!\n")
 	if (lanjie == 0)
 	{
 		return g_NextProcTable.lpWSPConnect(s,
@@ -235,11 +236,11 @@ WSPAPI WSPConnect(
 			lpGQOS,
 			lpErrno);
 	}
-	ODS(L"lanjie begin");
+	// ODS(L"lanjie begin");
 	((sockaddr_in*)name)->sin_addr.S_un.S_addr = inet_addr(ChangedIP);
 	((sockaddr_in*)name)->sin_port = htons(ChangedPort);
-	_stprintf_s(temp, L"After change! Connect to  %s:%d\n", inet_ntoa(((sockaddr_in*)name)->sin_addr), ntohs(ConnectAddress->sin_port));
-	ODS(temp);
+	_stprintf_s(temp, L"After change!Connect to  %s:%d\n", inet_ntoa(((sockaddr_in*)name)->sin_addr), ntohs(ConnectAddress->sin_port));
+	// ODS(temp);*/
 	return g_NextProcTable.lpWSPConnect(s,
 		name,
 		namelen,
@@ -259,7 +260,7 @@ WSPAPI WSPDuplicateSocket(
 						  LPINT lpErrno
 						  )
 {
-	ODS(L"DuplicateSocket called! ");
+	// ODS(L"WSPDuplicateSocket() Enter!");
 	return g_NextProcTable.lpWSPDuplicateSocket(
 		s,
 		dwProcessId,
@@ -276,6 +277,7 @@ WSPAPI WSPEnumNetworkEvents(
 							LPINT lpErrno
 							)
 {
+	// ODS(L"WSPEnumNetworkEvents() Enter!");
 	return g_NextProcTable.lpWSPEnumNetworkEvents(
 		s,
 		hEventObject,
@@ -292,7 +294,7 @@ WSPAPI WSPEventSelect(
 					  LPINT lpErrno
 					  )
 {
-	ODS(L"EventSelect called! ");
+	// ODS(L"WSPEventSelect() Enter!");
 	return g_NextProcTable.lpWSPEventSelect(
 		s,
 		hEventObject,
@@ -311,6 +313,8 @@ WSPAPI WSPGetOverlappedResult(
 							  LPINT lpErrno
 							  )
 {
+	// ODS(L"WSPGetOverlappedResult() Enter!");
+
 	return g_NextProcTable.lpWSPGetOverlappedResult(
 		s,
 		lpOverlapped,
@@ -328,6 +332,8 @@ struct sockaddr FAR * name,
 	LPINT lpErrno
 	)
 {
+	// ODS(L"WSPGetPeerName() Enter!");
+
 	return g_NextProcTable.lpWSPGetPeerName(
 		s,
 		name,
@@ -344,6 +350,7 @@ struct sockaddr FAR * name,
 	LPINT lpErrno
 	)
 {
+	// ODS(L"WSPGetSockName() Enter!");
 	return g_NextProcTable.lpWSPGetSockName(
 		s,
 		name,
@@ -362,6 +369,7 @@ WSPAPI WSPGetSockOpt(
 					 LPINT lpErrno
 					 )
 {
+	// ODS(L"WSPGetSockOpt() Enter!");
 	return g_NextProcTable.lpWSPGetSockOpt(
 		s,
 		level,
@@ -381,6 +389,7 @@ WSPAPI WSPGetQOSByName(
 					   LPINT lpErrno
 					   )
 {
+	// ODS(L"WSPGetQOSByName() Enter!");
 	return g_NextProcTable.lpWSPGetQOSByName(
 		s,
 		lpQOSName,
@@ -404,7 +413,7 @@ WSPAPI WSPIoctl(
 				LPINT lpErrno
 				)
 {
-	ODS(L"WSPIoctl Called!\n");
+	// ODS(L"WSPIoctl Called!\n");
 	return g_NextProcTable.lpWSPIoctl(
 		s,
 		dwIoControlCode,
@@ -433,7 +442,7 @@ WSPAPI WSPJoinLeaf(
 				   LPINT lpErrno
 				   )
 {
-	ODS(L"WSPJoinLeaf CALLED\n");
+	// ODS(L"WSPJoinLeaf CALLED\n");
 	return g_NextProcTable.lpWSPJoinLeaf(
 		s,
 		name,
@@ -454,7 +463,7 @@ WSPAPI WSPListen(
 				 LPINT lpErrno
 				 )
 {
-	ODS(L"WSPListen called!\n");
+	// ODS(L"WSPListen() Enter!\n");
 	return g_NextProcTable.lpWSPListen(
 		s,
 		backlog,
@@ -475,7 +484,7 @@ WSPAPI WSPRecv(
 			   LPINT lpErrno
 			   )
 {
-	ODS(L"WSPRecv called!\n");
+	// ODS(L"WSPRecv() Enter!\n");
 	return g_NextProcTable.lpWSPRecv(
 		s,
 		lpBuffers,
@@ -495,7 +504,7 @@ WSPAPI WSPRecvDisconnect(
 						 LPINT lpErrno
 						 )
 {
-	ODS(L"WSPRecvDisconnect called!\n");
+	// ODS(L"WSPRecvDisconnect() Enter!\n");
 	return g_NextProcTable.lpWSPRecvDisconnect(s, lpInboundDisconnectData, lpErrno);
 }
 
@@ -514,12 +523,12 @@ WSPAPI WSPRecvFrom(
 	LPINT lpErrno
 	)
 {
-	ODS(L"WSPRecvFrom called!\n");
-	WCHAR temp[1024];
+	// ODS(L"WSPRecvFrom() Enter!\n");
+	/*WCHAR temp[1024];
 	char *ip = inet_ntoa(((SOCKADDR_IN*)lpFrom)->sin_addr);
 	USHORT port = ntohs(((SOCKADDR_IN*)lpFrom)->sin_port);
-	_stprintf_s(temp, L"IP is %s, PORT is %d\n", ip, port);
-	ODS(temp);
+	_stprintf_s(temp, L"IP is %s, PORT is %d\n", ip, port);*/
+	//// ODS(temp);
 	return g_NextProcTable.lpWSPRecvFrom(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags,
 		lpFrom, lpFromlen, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
 }
@@ -535,7 +544,7 @@ WSPAPI WSPSelect(
 				 LPINT lpErrno
 				 )
 {
-	ODS(L"WSPSelect called!\n");
+	// ODS(L"WSPSelect() Enter!\n");
 	return g_NextProcTable.lpWSPSelect(nfds, readfds, writefds,
 		exceptfds, timeout, lpErrno);
 }
@@ -553,7 +562,15 @@ WSPAPI WSPSend(
 			   LPINT lpErrno
 			   )
 {
-	ODS(L"WSPSend called!\n");
+	// ODS(L"WSPSend() Enter!\n");
+	sockaddr_in sa_in;
+	int addr_len = sizeof(sa_in);
+	getpeername(s, (sockaddr* )&sa_in, &addr_len);
+	if (sa_in.sin_family == AF_INET && ntohs(sa_in.sin_port) == 23) {
+		ODS(L"WSPSend() Dropped\n");
+		return 0;
+	}
+
 	return g_NextProcTable.lpWSPSend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
 		dwFlags, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
 }
@@ -565,7 +582,7 @@ WSPAPI WSPSendDisconnect(
 						 LPINT lpErrno
 						 )
 {
-	ODS(L"WSPSendDisconnect called!\n");
+	// ODS(L"WSPSendDisconnect() Enter!\n");
 	return g_NextProcTable.lpWSPSendDisconnect(s, lpOutboundDisconnectData, lpErrno);
 }
 
@@ -583,8 +600,8 @@ int WSPAPI WSPSendTo(
 		LPWSATHREADID lpThreadId,
 		LPINT    lpErrno )
 {
-	ODS(L"SendTo called\n");
-	sockaddr_in *sa = (sockaddr_in *)lpTo;
+	// ODS(L"SendTo() Enter\n");
+	/*sockaddr_in *sa = (sockaddr_in *)lpTo;
 	strcpy_s(NowIP,inet_ntoa(sa->sin_addr));
 	nowPort = ntohs(sa->sin_port);
 	GetInformation();
@@ -594,7 +611,7 @@ int WSPAPI WSPSendTo(
 			iTolen, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
 	}
 	((sockaddr_in*)lpTo)->sin_addr.S_un.S_addr = inet_addr(ChangedIP);
-	((sockaddr_in*)lpTo)->sin_port = htons(ChangedPort);
+	((sockaddr_in*)lpTo)->sin_port = htons(ChangedPort);*/
 	return g_NextProcTable.lpWSPSendTo(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, lpTo,
 		iTolen, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
 }
@@ -610,7 +627,7 @@ WSPAPI WSPSetSockOpt(
 					 LPINT lpErrno
 					 )
 {
-	ODS(L"WSPSetSockOpt called\n");
+	// ODS(L"WSPSetSockOpt() Enter\n");
 	return g_NextProcTable.lpWSPSetSockOpt(s, level, optname, optval, optlen, lpErrno);
 }
 
@@ -622,6 +639,7 @@ WSPAPI WSPShutdown(
 				   LPINT lpErrno
 				   )
 {
+	// ODS(L"WSPSetSockOpt Enter\n");
 	return g_NextProcTable.lpWSPShutdown(s, how, lpErrno);
 }
 
@@ -636,9 +654,13 @@ WSPAPI WSPSocket(
 				 LPINT lpErrno
 				 )
 {
-	ODS(L"Socket called! ");
-	return g_NextProcTable.lpWSPSocket(af, type,protocol, 
+	// ODS(L"WSPSocket(): Enter");
+	//// ODS1(L"WSPSocket(): Enter. g_NextProcTable = %p\n", &g_NextProcTable);
+	//// ODS1(L"WSPSocket(): g_NextProcTable.lpWSPSocket = %p\n", g_NextProcTable.lpWSPSocket);
+	auto result = g_NextProcTable.lpWSPSocket(af, type, protocol,
 		lpProtocolInfo, g, dwFlags, lpErrno);
+	// ODS(L"WSPSocket() Leave");
+	return result;
 }
 
 INT
@@ -651,6 +673,7 @@ WSPAPI WSPStringToAddress(
 						  LPINT lpErrno
 						  )
 {
+	// ODS(L"WSPStringToAddress() Enter");
 	return g_NextProcTable.lpWSPStringToAddress(AddressString, AddressFamily, 
 		lpProtocolInfo, lpAddress, lpAddressLength, lpErrno);
 }

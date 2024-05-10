@@ -1,6 +1,10 @@
 #include "MyLSP.h"
 #include "debug.h"
 
+WSPUPCALLTABLE g_pUpCallTable;
+WSPPROC_TABLE g_NextProcTable;
+TCHAR g_szCurrentApp[MAX_PATH];
+
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, LPVOID lpReserved)
 {
 	switch (dwReason)
@@ -46,7 +50,7 @@ int WSPAPI WSPStartup(
 					  )
 {
 	int i;
-	ODS1(L"WSPStartup... %s \n", g_szCurrentApp);
+	ODS1(L"WSPStartup() Enter. %s\n", g_szCurrentApp);
 
 	if(lpProtocolInfo->ProtocolChain.ChainLen <= 1)
 	{
@@ -87,6 +91,8 @@ int WSPAPI WSPStartup(
 		ODS1(L" WSPStartup: ExpandEnvironmentStrings() failed %d \n", ::GetLastError());
 		return WSAEPROVIDERFAILEDINIT;
 	}
+
+	ODS1(L" WSPStartup(): LoadLibrary(%s)\n", szBaseProviderDll);
 
 	HMODULE hModule = ::LoadLibrary(szBaseProviderDll);
 	if(hModule == NULL)
@@ -145,5 +151,9 @@ int WSPAPI WSPStartup(
 	lpProcTable->lpWSPShutdown = WSPShutdown;
 	lpProcTable->lpWSPStringToAddress = WSPStringToAddress;
 	FreeProvider(pProtoInfo);
+	//ODS1(L"WSPStartup(): g_NextProcTable = %p\n", &g_NextProcTable);
+	//for (int i = 0; i < 30; i ++)
+	//	ODS1(L"WSPStartup() g_NextProcTable[i] %p\n", ((ULONG* )&g_NextProcTable)[i]);
+	ODS1(L"WSPStartup() Leave. %s\n", g_szCurrentApp);
 	return nRet;
 }

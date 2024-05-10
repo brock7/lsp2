@@ -3,14 +3,14 @@
 #ifdef _DEBUG
 #define ODS(szOut)\
 {\
-	OutputDebugString(szOut);\
+	OutputDebugStringW(szOut);\
 }
 
 #define ODS1(szOut, var)\
 {						\
 	TCHAR sz[1024];		\
 	_stprintf_s(sz, szOut, var);\
-	OutputDebugString(sz);\
+	OutputDebugStringW(sz);\
 }
 #else
 #define ODS(szOut)

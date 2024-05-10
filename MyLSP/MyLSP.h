@@ -20,15 +20,15 @@
 #define IP_MAX_LENGTH 30
 
 
-static WSPUPCALLTABLE g_pUpCallTable;
-static WSPPROC_TABLE g_NextProcTable;
-static TCHAR g_szCurrentApp[MAX_PATH];
+extern WSPUPCALLTABLE g_pUpCallTable;
+extern WSPPROC_TABLE g_NextProcTable;
+extern TCHAR g_szCurrentApp[MAX_PATH];
 
-static char ChangedIP[IP_MAX_LENGTH] = "23.88.59.59";
-static char OrigIP[IP_MAX_LENGTH] = "";
-static char NowIP[IP_MAX_LENGTH];
-static unsigned short ChangedPort = 80, origPort = 80, nowPort = 0;
-static char lanjie = 0;
+//static char ChangedIP[IP_MAX_LENGTH] = "23.88.59.59";
+//static char OrigIP[IP_MAX_LENGTH] = "";
+//static char NowIP[IP_MAX_LENGTH];
+//static unsigned short ChangedPort = 80, origPort = 80, nowPort = 0;
+//static char lanjie = 0;
 
 
 DWORD GetInformation();
