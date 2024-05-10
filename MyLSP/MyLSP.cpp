@@ -40,7 +40,6 @@ void FreeProvider(LPWSAPROTOCOL_INFOW pProtoInfo)
 	::GlobalFree(pProtoInfo);
 }
 
-
 int WSPAPI WSPStartup(
 					  WORD wVersionRequested,
 					  LPWSPDATA lpWSPData,
@@ -57,6 +56,7 @@ int WSPAPI WSPStartup(
 		return WSAEPROVIDERFAILEDINIT;
 	}
 	g_pUpCallTable = UpcallTable;
+
 	WSAPROTOCOL_INFOW NextProtocolInfo;
 	int nTotalProtos;
 	LPWSAPROTOCOL_INFOW pProtoInfo = GetProvider(&nTotalProtos);
@@ -75,7 +75,6 @@ int WSPAPI WSPStartup(
 		ODS(L" WSPStartup: Can not find underlying protocol \n");
 		return WSAEPROVIDERFAILEDINIT;
 	}
-
 
 	int nError;
 	TCHAR szBaseProviderDll[MAX_PATH];
@@ -100,7 +99,6 @@ int WSPAPI WSPStartup(
 		ODS1(L" WSPStartup: LoadLibrary() failed %d \n", ::GetLastError());
 		return WSAEPROVIDERFAILEDINIT;
 	}
-
 
 	LPWSPSTARTUP pfnWSPStartup = NULL;
 	pfnWSPStartup = (LPWSPSTARTUP)::GetProcAddress(hModule, "WSPStartup");

@@ -101,7 +101,6 @@
 //	return 0;
 //}
 
-
 SOCKET
 WSPAPI  WSPAccept(
 	SOCKET s,
@@ -115,7 +114,6 @@ WSPAPI  WSPAccept(
 	// ODS(L"WSPAccept() Enter!");
 	return g_NextProcTable.lpWSPAccept(s, addr, addrlen, lpfnCondition, dwCallbackData, lpErrno);
 }
-
 
 INT
 WSPAPI WSPAddressToString(
@@ -154,7 +152,6 @@ WSPAPI WSPAsyncSelect(
 		lpErrno);
 }
 
-
 int
 WSPAPI WSPBind(
 			   SOCKET s,
@@ -189,7 +186,6 @@ WSPAPI WSPCleanup(
 		lpErrno);
 }
 
-
 int
 WSPAPI WSPCloseSocket(
 					  SOCKET s,
@@ -199,7 +195,6 @@ WSPAPI WSPCloseSocket(
 	// ODS(L"WSPCloseSocket() Enter!");
 	return g_NextProcTable.lpWSPCloseSocket(s, lpErrno);
 }
-
 
 int
 WSPAPI WSPConnect(
@@ -251,7 +246,6 @@ WSPAPI WSPConnect(
 		lpErrno);
 }
 
-
 int
 WSPAPI WSPDuplicateSocket(
 						  SOCKET s,
@@ -267,7 +261,6 @@ WSPAPI WSPDuplicateSocket(
 		lpProtocolInfo,
 		lpErrno);
 }
-
 
 int
 WSPAPI WSPEnumNetworkEvents(
@@ -285,7 +278,6 @@ WSPAPI WSPEnumNetworkEvents(
 		lpErrno);
 }
 
-
 int
 WSPAPI WSPEventSelect(
 					  SOCKET s,
@@ -301,7 +293,6 @@ WSPAPI WSPEventSelect(
 		lNetworkEvents,
 		lpErrno);
 }
-
 
 BOOL
 WSPAPI WSPGetOverlappedResult(
@@ -341,7 +332,6 @@ struct sockaddr FAR * name,
 		lpErrno);
 }
 
-
 int
 WSPAPI WSPGetSockName(
 					  SOCKET s,
@@ -357,7 +347,6 @@ struct sockaddr FAR * name,
 		namelen,
 		lpErrno);
 }
-
 
 int
 WSPAPI WSPGetSockOpt(
@@ -380,7 +369,6 @@ WSPAPI WSPGetSockOpt(
 		);
 }
 
-
 BOOL
 WSPAPI WSPGetQOSByName(
 					   SOCKET s,
@@ -396,7 +384,6 @@ WSPAPI WSPGetQOSByName(
 		lpQOS,
 		lpErrno);
 }
-
 
 int
 WSPAPI WSPIoctl(
@@ -428,7 +415,6 @@ WSPAPI WSPIoctl(
 		lpErrno);
 }
 
-
 SOCKET
 WSPAPI WSPJoinLeaf(
 				   SOCKET s,
@@ -455,7 +441,6 @@ WSPAPI WSPJoinLeaf(
 		lpErrno);
 }
 
-
 int
 WSPAPI WSPListen(
 				 SOCKET s,
@@ -469,7 +454,6 @@ WSPAPI WSPListen(
 		backlog,
 		lpErrno);
 }
-
 
 int
 WSPAPI WSPRecv(
@@ -533,7 +517,6 @@ WSPAPI WSPRecvFrom(
 		lpFrom, lpFromlen, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
 }
 
-
 int
 WSPAPI WSPSelect(
 				 int nfds,
@@ -586,7 +569,6 @@ WSPAPI WSPSendDisconnect(
 	return g_NextProcTable.lpWSPSendDisconnect(s, lpOutboundDisconnectData, lpErrno);
 }
 
-
 int WSPAPI WSPSendTo(
 		SOCKET    s,
 		LPWSABUF   lpBuffers,
@@ -616,7 +598,6 @@ int WSPAPI WSPSendTo(
 		iTolen, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
 }
 
-
 int
 WSPAPI WSPSetSockOpt(
 					 SOCKET s,
@@ -630,7 +611,6 @@ WSPAPI WSPSetSockOpt(
 	// ODS(L"WSPSetSockOpt() Enter\n");
 	return g_NextProcTable.lpWSPSetSockOpt(s, level, optname, optval, optlen, lpErrno);
 }
-
 
 int
 WSPAPI WSPShutdown(
