@@ -532,6 +532,18 @@ WSPAPI WSPSelect(
 		exceptfds, timeout, lpErrno);
 }
 
+int wildcard_memcmp(LPCBYTE src, LPCBYTE dst, size_t len, BYTE wildcard = '*')
+{
+	for (size_t i = 0; i < len; i++) {
+		if (dst[i] == wildcard || src[i] == dst[i])
+			continue;
+		else
+			return src[i] - dst[i];
+	}
+
+	return 0;
+}
+
 int
 WSPAPI WSPSend(
 			   SOCKET s,
@@ -546,12 +558,27 @@ WSPAPI WSPSend(
 			   )
 {
 	// ODS(L"WSPSend() Enter!\n");
-	sockaddr_in sa_in;
+	/*sockaddr_in sa_in;
 	int addr_len = sizeof(sa_in);
 	getpeername(s, (sockaddr* )&sa_in, &addr_len);
 	if (sa_in.sin_family == AF_INET && ntohs(sa_in.sin_port) == 23) {
 		ODS(L"WSPSend() Dropped\n");
 		return 0;
+	}*/
+	TRACE(L"WSPSend(): dwBufferCount = %d\n", dwBufferCount);
+
+	LPCBYTE dest = (LPCBYTE )"#*F^e";
+	size_t len = strlen((const char* )dest);
+	
+	if (dwBufferCount == 1 && lpBuffers->len >= len) {
+		LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
+		TRACE(L"WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
+		if (wildcard_memcmp((LPCBYTE)lpBuffers->buf, dest, len) == 0) {
+
+			TRACE(L"WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
+			ODS(L"WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
+			//return 0;
+		}
 	}
 
 	return g_NextProcTable.lpWSPSend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
