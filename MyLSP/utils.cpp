@@ -1,7 +1,13 @@
+#include "utils.h"
 #include <windows.h>
 #include <detours.h>
 #include <iphlpapi.h>
 #include "debug.h"
+
+#include <iostream>  
+#include <sstream>  
+#include <iomanip>  
+#include <string> 
 
 #pragma comment(lib, "detours.lib")
 #pragma comment(lib, "IPHLPAPI.lib")
@@ -38,4 +44,27 @@ void Hook_GetAdaptersInfo()
 	else {
 		TRACE("MyLSP.dll:Error detouring GetAdaptersInfo(): %ld\n", error);
 	}
+}
+
+std::string arrayToHexString(const unsigned char* arr, size_t length) {
+	std::stringstream ss;
+
+	for (size_t i = 0; i < length; ++i) {
+		if (i != 0)
+			ss << ",";
+		ss << "0x" << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(arr[i]);
+	}
+	return ss.str();
+}
+
+int wildcard_memcmp(LPCBYTE src, LPCBYTE dst, size_t len, BYTE wildcard)
+{
+	for (size_t i = 0; i < len; i++) {
+		if (dst[i] == wildcard || src[i] == dst[i])
+			continue;
+		else
+			return src[i] - dst[i];
+	}
+
+	return 0;
 }

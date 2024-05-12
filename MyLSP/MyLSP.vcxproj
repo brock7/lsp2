@@ -85,6 +85,7 @@
   <ItemGroup>
     <ClInclude Include="debug.h" />
     <ClInclude Include="MyLSP.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="functions.cpp" />

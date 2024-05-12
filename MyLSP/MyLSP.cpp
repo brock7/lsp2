@@ -1,6 +1,8 @@
 #include "MyLSP.h"
 #include "debug.h"
 #include <shlwapi.h>  
+#include "utils.h"
+
 #pragma comment(lib, "shlwapi.lib")  
 
 WSPUPCALLTABLE g_pUpCallTable;
@@ -30,8 +32,6 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, LPVOID lpReserved)
 	return TRUE;
 }
 
-void Hook_GetAdaptersInfo();
-
 void InitLSP(HANDLE hModule)
 {
 	::GetModuleFileName(NULL, g_szCurrentApp, MAX_PATH);
@@ -42,7 +42,7 @@ void InitLSP(HANDLE hModule)
 	sprintf(filename, "%s\\Log_%u.log", g_szModulePath, GetCurrentProcessId());
 	g_logfp = fopen(filename, "a+");
 
-	Hook_GetAdaptersInfo();
+	//Hook_GetAdaptersInfo();
 }
 
 LPWSAPROTOCOL_INFOW GetProvider(LPINT lpnTotalProtocols)

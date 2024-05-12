@@ -1,5 +1,6 @@
 #include "MyLSP.h"
 #include "debug.h"
+#include "utils.h"
 
 //DWORD GetInformation()
 //{
@@ -455,6 +456,8 @@ WSPAPI WSPListen(
 		lpErrno);
 }
 
+int g_step = 0;
+
 int
 WSPAPI WSPRecv(
 			   SOCKET s,
@@ -468,8 +471,17 @@ WSPAPI WSPRecv(
 			   LPINT lpErrno
 			   )
 {
-	// ODS(L"WSPRecv() Enter!\n");
-	return g_NextProcTable.lpWSPRecv(
+	unsigned char fake_pkt[] = {
+		0x55, 0xAA, 0x55, 0xAA, 0x39, 0x9C, 0x68, 0xBD, 0x01, 0x00,
+		0x38, 0x00, 0x00, 0x00, 0x23, 0x65, 0x46, 0x61, 0x77, 0x4A,
+		0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3D, 0x60, 0x3D, 0x68, 0x52,
+		0x75, 0x52, 0x3D, 0x3D, 0x7B, 0x3D, 0x6C, 0x54, 0x5F, 0x41,
+		0x62, 0x51, 0x4F, 0x55, 0x4E, 0x59, 0x72, 0x5D, 0x41, 0x59,
+		0x60, 0x4D, 0x6E, 0x56, 0x51, 0x51, 0x6B, 0x48, 0x5F, 0x40,
+		0x71, 0x47, 0x73, 0x59, 0x65, 0x4C, 0x4F, 0x70, 0x79, 0x21 };
+
+	TRACE("WSPRecv() Enter!\n");
+	auto result = g_NextProcTable.lpWSPRecv(
 		s,
 		lpBuffers,
 		dwBufferCount,
@@ -479,6 +491,26 @@ WSPAPI WSPRecv(
 		lpCompletionRoutine,
 		lpThreadId,
 		lpErrno);
+
+	if (dwBufferCount == 1 && lpBuffers->len == sizeof(fake_pkt)) {
+		if (g_step == 1) {
+			
+			unsigned char tbuf[33];
+			LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
+			memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
+			tbuf[sizeof(tbuf) - 1] = 0;
+			auto str = arrayToHexString(tbuf, sizeof(tbuf));
+			// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
+			TRACE("WSPRecv(): Buf = %s\n", str.c_str());
+			TRACE("WSPRecv() Replaced!!!!!\n");
+
+			memcpy(lpBuffers->buf, fake_pkt, sizeof(fake_pkt));
+			g_step += 1;
+		}
+	}
+
+	TRACE("WSPRecv() Leave!\n");
+	return result;
 }
 
 int
@@ -532,18 +564,6 @@ WSPAPI WSPSelect(
 		exceptfds, timeout, lpErrno);
 }
 
-int wildcard_memcmp(LPCBYTE src, LPCBYTE dst, size_t len, BYTE wildcard = '*')
-{
-	for (size_t i = 0; i < len; i++) {
-		if (dst[i] == wildcard || src[i] == dst[i])
-			continue;
-		else
-			return src[i] - dst[i];
-	}
-
-	return 0;
-}
-
 int
 WSPAPI WSPSend(
 			   SOCKET s,
@@ -565,7 +585,7 @@ WSPAPI WSPSend(
 		ODS(L"WSPSend() Dropped\n");
 		return 0;
 	}*/
-	TRACE("WSPSend(): dwBufferCount = %d\n", dwBufferCount);
+	TRACE("WSPSend(): Enter. dwBufferCount = %d\n", dwBufferCount);
 
 	LPCBYTE dest = (LPCBYTE )"#*F^e";
 	size_t len = strlen((const char* )dest);
@@ -578,17 +598,22 @@ WSPAPI WSPSend(
 		// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
 		TRACE("WSPSend(): Buf = %s\n", tbuf);
 		if (wildcard_memcmp((LPCBYTE)lpBuffers->buf, dest, len) == 0) {
-
+			
+			if (g_step == 0)
+				g_step += 1;
 			// "U\xaaU\xaa9\x9ch\xbd\x01\x008\x00\x00\x00#eFawJ<<<<<=`=hRuR=={=lT_AbQOUNYr]AY`MnVQQkH_@qGsYeLOpy!"
 			// "U\xaaU\xaa\xbadW\xb3\x01\x008\x00\x00\x00#O]qvg[{{{{y`=\RRkwdrnLVBQLQbUKPBPsPNynVQakR`q@QoQNUopy!"
 			TRACE("WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
-			//ODS("WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
-			//return 0;
+			//TRACE("WSPSend(): Leave \n");
+			//return lpBuffers->len;
 		}
 	}
 
-	return g_NextProcTable.lpWSPSend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
+	auto result = g_NextProcTable.lpWSPSend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
 		dwFlags, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
+
+	TRACE("WSPSend(): Leave \n");
+	return result;
 }
 
 int
