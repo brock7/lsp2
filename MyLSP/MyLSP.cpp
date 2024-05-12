@@ -30,6 +30,8 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, LPVOID lpReserved)
 	return TRUE;
 }
 
+void Hook_GetAdaptersInfo();
+
 void InitLSP(HANDLE hModule)
 {
 	::GetModuleFileName(NULL, g_szCurrentApp, MAX_PATH);
@@ -39,6 +41,8 @@ void InitLSP(HANDLE hModule)
 	char filename[MAX_PATH];
 	sprintf(filename, "%s\\Log_%u.log", g_szModulePath, GetCurrentProcessId());
 	g_logfp = fopen(filename, "a+");
+
+	Hook_GetAdaptersInfo();
 }
 
 LPWSAPROTOCOL_INFOW GetProvider(LPINT lpnTotalProtocols)

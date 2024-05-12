@@ -5,6 +5,7 @@
 #include <string.h>
 
 #define LOG_FILE 1
+#define DEBUG_VIEW 1
 
 #if LOG_FILE
 extern FILE* g_logfp;
@@ -12,7 +13,11 @@ inline void WriteLog(const char* str)
 {
 	fwrite(str, strlen(str), 1, g_logfp);
 	fflush(g_logfp);
+#if DEBUG_VIEW
+	OutputDebugStringA(str);
+#endif
 }
+
 #else
 #define WriteLog OutputDebugStringA
 #endif

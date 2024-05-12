@@ -1,5 +1,5 @@
-#include "debug.h"
 #include "MyLSP.h"
+#include "debug.h"
 
 //DWORD GetInformation()
 //{
@@ -571,7 +571,7 @@ WSPAPI WSPSend(
 	size_t len = strlen((const char* )dest);
 	
 	if (dwBufferCount == 1 && lpBuffers->len >= len) {
-		char tbuf[21];
+		char tbuf[33];
 		LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
 		memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
 		tbuf[sizeof(tbuf) - 1] = 0;

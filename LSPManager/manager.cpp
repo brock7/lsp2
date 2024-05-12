@@ -482,7 +482,8 @@ int get_mac()
 }
 int main(int argc, char* argv[])
 {
-	return get_mac();
+	//return get_mac()
+	//return test();
 
 	if (argc > 1 && stricmp(argv[1], "remove") == 0)
 		RemoveLSP();
