@@ -565,18 +565,24 @@ WSPAPI WSPSend(
 		ODS(L"WSPSend() Dropped\n");
 		return 0;
 	}*/
-	TRACE(L"WSPSend(): dwBufferCount = %d\n", dwBufferCount);
+	TRACE("WSPSend(): dwBufferCount = %d\n", dwBufferCount);
 
 	LPCBYTE dest = (LPCBYTE )"#*F^e";
 	size_t len = strlen((const char* )dest);
 	
 	if (dwBufferCount == 1 && lpBuffers->len >= len) {
+		char tbuf[21];
 		LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
-		TRACE(L"WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
+		memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
+		tbuf[sizeof(tbuf) - 1] = 0;
+		// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
+		TRACE("WSPSend(): Buf = %s\n", tbuf);
 		if (wildcard_memcmp((LPCBYTE)lpBuffers->buf, dest, len) == 0) {
 
-			TRACE(L"WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
-			ODS(L"WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
+			// "U\xaaU\xaa9\x9ch\xbd\x01\x008\x00\x00\x00#eFawJ<<<<<=`=hRuR=={=lT_AbQOUNYr]AY`MnVQQkH_@qGsYeLOpy!"
+			// "U\xaaU\xaa\xbadW\xb3\x01\x008\x00\x00\x00#O]qvg[{{{{y`=\RRkwdrnLVBQLQbUKPBPsPNynVQakR`q@QoQNUopy!"
+			TRACE("WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
+			//ODS("WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
 			//return 0;
 		}
 	}

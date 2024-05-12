@@ -1,22 +1,39 @@
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
+
+#include <stdio.h>
+#include <string.h>
+
+#define LOG_FILE 1
+
+#if LOG_FILE
+extern FILE* g_logfp;
+inline void WriteLog(const char* str)
+{
+	fwrite(str, strlen(str), 1, g_logfp);
+	fflush(g_logfp);
+}
+#else
+#define WriteLog OutputDebugStringA
+#endif
+
 #ifdef _DEBUG
 #define ODS(szOut)\
 {\
-	OutputDebugStringW(szOut);\
+	WriteLog(szOut);\
 }
 
 #define ODS1(szOut, var)\
 {						\
-	TCHAR sz[1024];		\
-	_stprintf_s(sz, szOut, var);\
-	OutputDebugStringW(sz);\
+	char sz[1024];		\
+	sprintf_s(sz, szOut, var);\
+	WriteLog(sz);\
 }
 
 #define TRACE(fmt, ...)	{ \
-	TCHAR sz[1024];		\
-	_stprintf_s(sz, fmt, ##__VA_ARGS__); \
-	OutputDebugStringW(sz); \
+	char sz[1024];		\
+	sprintf_s(sz, fmt, ##__VA_ARGS__); \
+	WriteLog(sz);\
 }
 
 #else

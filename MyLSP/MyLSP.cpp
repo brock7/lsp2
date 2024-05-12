@@ -1,23 +1,44 @@
 #include "MyLSP.h"
 #include "debug.h"
+#include <shlwapi.h>  
+#pragma comment(lib, "shlwapi.lib")  
 
 WSPUPCALLTABLE g_pUpCallTable;
 WSPPROC_TABLE g_NextProcTable;
 TCHAR g_szCurrentApp[MAX_PATH];
+char g_szModulePath[MAX_PATH];
+FILE* g_logfp = nullptr;
+
+void InitLSP(HANDLE hModule);
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, LPVOID lpReserved)
 {
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
-		{
-			::GetModuleFileName(NULL, g_szCurrentApp, MAX_PATH);
+		InitLSP(hModule);
+		break;
+	case DLL_PROCESS_DETACH:
+		if (g_logfp) {
+			fclose(g_logfp);
+			g_logfp = nullptr;
 		}
 		break;
 	default:
 		break;
 	}
 	return TRUE;
+}
+
+void InitLSP(HANDLE hModule)
+{
+	::GetModuleFileName(NULL, g_szCurrentApp, MAX_PATH);
+	
+	GetModuleFileNameA((HMODULE)hModule, g_szModulePath, sizeof(g_szModulePath) - 1);
+	::PathRemoveFileSpecA(g_szModulePath);
+	char filename[MAX_PATH];
+	sprintf(filename, "%s\\Log_%u.log", g_szModulePath, GetCurrentProcessId());
+	g_logfp = fopen(filename, "a+");
 }
 
 LPWSAPROTOCOL_INFOW GetProvider(LPINT lpnTotalProtocols)
@@ -49,7 +70,7 @@ int WSPAPI WSPStartup(
 					  )
 {
 	int i;
-	ODS1(L"WSPStartup() Enter. %s\n", g_szCurrentApp);
+	ODS1("WSPStartup() Enter. %ws\n", g_szCurrentApp);
 
 	if(lpProtocolInfo->ProtocolChain.ChainLen <= 1)
 	{
@@ -72,7 +93,7 @@ int WSPAPI WSPStartup(
 	}
 	if(i >= nTotalProtos)
 	{
-		ODS(L" WSPStartup: Can not find underlying protocol \n");
+		ODS(" WSPStartup: Can not find underlying protocol \n");
 		return WSAEPROVIDERFAILEDINIT;
 	}
 
@@ -82,21 +103,21 @@ int WSPAPI WSPStartup(
 
 	if(::WSCGetProviderPath(&NextProtocolInfo.ProviderId, szBaseProviderDll, &nLen, &nError) == SOCKET_ERROR)
 	{
-		ODS1(L" WSPStartup: WSCGetProviderPath() failed %d \n", nError);
+		ODS1(" WSPStartup: WSCGetProviderPath() failed %d \n", nError);
 		return WSAEPROVIDERFAILEDINIT;
 	}
 	if(!::ExpandEnvironmentStrings(szBaseProviderDll, szBaseProviderDll, MAX_PATH))
 	{
-		ODS1(L" WSPStartup: ExpandEnvironmentStrings() failed %d \n", ::GetLastError());
+		ODS1(" WSPStartup: ExpandEnvironmentStrings() failed %d \n", ::GetLastError());
 		return WSAEPROVIDERFAILEDINIT;
 	}
 
-	ODS1(L" WSPStartup(): LoadLibrary(%s)\n", szBaseProviderDll);
+	ODS1(" WSPStartup(): LoadLibrary(%ws)\n", szBaseProviderDll);
 
 	HMODULE hModule = ::LoadLibrary(szBaseProviderDll);
 	if(hModule == NULL)
 	{
-		ODS1(L" WSPStartup: LoadLibrary() failed %d \n", ::GetLastError());
+		ODS1(" WSPStartup: LoadLibrary() failed %d \n", ::GetLastError());
 		return WSAEPROVIDERFAILEDINIT;
 	}
 
@@ -104,7 +125,7 @@ int WSPAPI WSPStartup(
 	pfnWSPStartup = (LPWSPSTARTUP)::GetProcAddress(hModule, "WSPStartup");
 	if(pfnWSPStartup == NULL)
 	{
-		ODS1(L" WSPStartup: GetProcAddress() failed %d \n", ::GetLastError());
+		ODS1(" WSPStartup: GetProcAddress() failed %d \n", ::GetLastError());
 		return WSAEPROVIDERFAILEDINIT;
 	}
 
@@ -114,7 +135,7 @@ int WSPAPI WSPStartup(
 	int nRet = pfnWSPStartup(wVersionRequested, lpWSPData, pInfo, UpcallTable, lpProcTable);
 	if(nRet != ERROR_SUCCESS)
 	{
-		ODS1(L" WSPStartup: underlying provider's WSPStartup() failed %d \n", nRet);
+		ODS1(" WSPStartup: underlying provider's WSPStartup() failed %d \n", nRet);
 		return nRet;
 	}
 	g_NextProcTable = *lpProcTable;
@@ -149,9 +170,9 @@ int WSPAPI WSPStartup(
 	lpProcTable->lpWSPShutdown = WSPShutdown;
 	lpProcTable->lpWSPStringToAddress = WSPStringToAddress;
 	FreeProvider(pProtoInfo);
-	//ODS1(L"WSPStartup(): g_NextProcTable = %p\n", &g_NextProcTable);
+	//ODS1("WSPStartup(): g_NextProcTable = %p\n", &g_NextProcTable);
 	//for (int i = 0; i < 30; i ++)
-	//	ODS1(L"WSPStartup() g_NextProcTable[i] %p\n", ((ULONG* )&g_NextProcTable)[i]);
-	ODS1(L"WSPStartup() Leave. %s\n", g_szCurrentApp);
+	//	ODS1("WSPStartup() g_NextProcTable[i] %p\n", ((ULONG* )&g_NextProcTable)[i]);
+	ODS1("WSPStartup() Leave. %ws\n", g_szCurrentApp);
 	return nRet;
 }
