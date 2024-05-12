@@ -1,7 +1,7 @@
 LIBRARY LSPManager
 
 EXPORTS
-	InstallLSP @ 1
-	RemoveLSP @ 2
-	DeleteRule @ 3
-	AddRule @ 4
+	;InstallLSP @ 1
+	;RemoveLSP @ 2
+	;DeleteRule @ 3
+	;AddRule @ 4

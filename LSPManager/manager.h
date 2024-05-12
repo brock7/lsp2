@@ -32,7 +32,7 @@ typedef enum _LSPERROR
 
 LSPERROR InstallLSP();
 LSPERROR RemoveLSP();
-LSPERROR AddRule(const char* name, const char* value);
-LSPERROR DeleteRule(const char*name);
+//LSPERROR AddRule(const char* name, const char* value);
+//LSPERROR DeleteRule(const char*name);
 
 #endif
