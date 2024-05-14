@@ -471,6 +471,9 @@ WSPAPI WSPRecv(
 			   LPINT lpErrno
 			   )
 {
+	TRACE("WSPRecv() Enter! dwBufferCount = %d, lpOverlapped = %p, lpCompletionRoutine = %p, Errno = %d\n", 
+		dwBufferCount, lpOverlapped, lpCompletionRoutine, *lpErrno);
+	
 	unsigned char fake_pkt[] = {
 		0x55, 0xAA, 0x55, 0xAA, 0x39, 0x9C, 0x68, 0xBD, 0x01, 0x00,
 		0x38, 0x00, 0x00, 0x00, 0x23, 0x65, 0x46, 0x61, 0x77, 0x4A,
@@ -480,7 +483,30 @@ WSPAPI WSPRecv(
 		0x60, 0x4D, 0x6E, 0x56, 0x51, 0x51, 0x6B, 0x48, 0x5F, 0x40,
 		0x71, 0x47, 0x73, 0x59, 0x65, 0x4C, 0x4F, 0x70, 0x79, 0x21 };
 
-	TRACE("WSPRecv() Enter!\n");
+	if (dwBufferCount == 1)
+		TRACE("WSPRecv(): Before Next WSPRecv. buf_len = %d\n", lpBuffers->len);
+
+	//if (dwBufferCount == 1) {
+	//	TRACE("WSPRecv(): Before Next WSPRecv. buf_len = %d\n", lpBuffers->len);
+	//	if (g_step == 1) {
+
+	//		unsigned char tbuf[33];
+	//		LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
+	//		memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
+	//		tbuf[sizeof(tbuf) - 1] = 0;
+	//		auto str = arrayToHexString(tbuf, sizeof(tbuf));
+	//		// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
+	//		TRACE("WSPRecv(): BufLen = %d, Buf = %s\n", lpBuffers->len, str.c_str());
+	//		TRACE("WSPRecv() Replaced!!!!!\n");
+
+	//		memcpy(lpBuffers->buf, fake_pkt, sizeof(fake_pkt));
+	//		g_step += 1;
+	//		//if (lpErrno)
+	//		//	*lpErrno = NO_ERROR;
+	//		//return NO_ERROR;
+	//	}
+	//}
+
 	auto result = g_NextProcTable.lpWSPRecv(
 		s,
 		lpBuffers,
@@ -492,24 +518,28 @@ WSPAPI WSPRecv(
 		lpThreadId,
 		lpErrno);
 
-	if (dwBufferCount == 1 && lpBuffers->len == sizeof(fake_pkt)) {
-		if (g_step == 1) {
-			
+	if (dwBufferCount == 1) {
+		TRACE("WSPRecv(): After Next WSPRecv. buf_len = %d\n", lpBuffers->len);
+		if (g_step == 1) { // 初步来看, 包是修改了, 但是可能修改的包不对
+
 			unsigned char tbuf[33];
 			LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
 			memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
 			tbuf[sizeof(tbuf) - 1] = 0;
 			auto str = arrayToHexString(tbuf, sizeof(tbuf));
 			// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
-			TRACE("WSPRecv(): Buf = %s\n", str.c_str());
+			TRACE("WSPRecv(): BufLen = %d, Buf = %s\n", lpBuffers->len, str.c_str());
 			TRACE("WSPRecv() Replaced!!!!!\n");
 
 			memcpy(lpBuffers->buf, fake_pkt, sizeof(fake_pkt));
 			g_step += 1;
+			//if (lpErrno)
+			//	*lpErrno = NO_ERROR;
+			//return NO_ERROR;
 		}
 	}
 
-	TRACE("WSPRecv() Leave!\n");
+	TRACE("WSPRecv() Leave(%x)\n", result);
 	return result;
 }
 
@@ -564,6 +594,8 @@ WSPAPI WSPSelect(
 		exceptfds, timeout, lpErrno);
 }
 
+// TODO: 修改发送接收函数, 打印出精准可比较的LOG
+// 从LOG输入来看, 可能同时进入, 所以必须支持多线程
 int
 WSPAPI WSPSend(
 			   SOCKET s,
@@ -585,34 +617,45 @@ WSPAPI WSPSend(
 		ODS(L"WSPSend() Dropped\n");
 		return 0;
 	}*/
-	TRACE("WSPSend(): Enter. dwBufferCount = %d\n", dwBufferCount);
+
+	TRACE("WSPSend() Enter! dwBufferCount = %d, lpOverlapped = %p, lpCompletionRoutine = %p, Errno = %d\n",
+		dwBufferCount, lpOverlapped, lpCompletionRoutine, *lpErrno);
 
 	LPCBYTE dest = (LPCBYTE )"#*F^e";
 	size_t len = strlen((const char* )dest);
 	
-	if (dwBufferCount == 1 && lpBuffers->len >= len) {
+	if (dwBufferCount == 1) {
+		
 		char tbuf[33];
 		LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
 		memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
 		tbuf[sizeof(tbuf) - 1] = 0;
-		// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
-		TRACE("WSPSend(): Buf = %s\n", tbuf);
-		if (wildcard_memcmp((LPCBYTE)lpBuffers->buf, dest, len) == 0) {
+		TRACE("WSPSend(): BufLen = %d, Buf = %s\n", lpBuffers->len, tbuf);
+
+		if (lpBuffers->len >= len) {
 			
-			if (g_step == 0)
-				g_step += 1;
-			// "U\xaaU\xaa9\x9ch\xbd\x01\x008\x00\x00\x00#eFawJ<<<<<=`=hRuR=={=lT_AbQOUNYr]AY`MnVQQkH_@qGsYeLOpy!"
-			// "U\xaaU\xaa\xbadW\xb3\x01\x008\x00\x00\x00#O]qvg[{{{{y`=\RRkwdrnLVBQLQbUKPBPsPNynVQakR`q@QoQNUopy!"
-			TRACE("WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
-			//TRACE("WSPSend(): Leave \n");
-			//return lpBuffers->len;
+			// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
+			if (wildcard_memcmp((LPCBYTE)lpBuffers->buf, dest, len) == 0) {
+
+				if (g_step == 0)
+					g_step += 1;
+				// "U\xaaU\xaa9\x9ch\xbd\x01\x008\x00\x00\x00#eFawJ<<<<<=`=hRuR=={=lT_AbQOUNYr]AY`MnVQQkH_@qGsYeLOpy!"
+				// "U\xaaU\xaa\xbadW\xb3\x01\x008\x00\x00\x00#O]qvg[{{{{y`=\RRkwdrnLVBQLQbUKPBPsPNynVQakR`q@QoQNUopy!"
+				TRACE("WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
+				//TRACE("WSPSend(): Leave \n");
+				//if (lpNumberOfBytesSent)
+				//	*lpNumberOfBytesSent = lpBuffers->len;
+				//if (lpErrno)
+				//	*lpErrno = NO_ERROR;
+				//return NO_ERROR;
+			}
 		}
 	}
 
 	auto result = g_NextProcTable.lpWSPSend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
 		dwFlags, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
 
-	TRACE("WSPSend(): Leave \n");
+	TRACE("WSPSend(): Leave(%x)\n", result);
 	return result;
 }
 
