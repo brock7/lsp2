@@ -458,6 +458,70 @@ WSPAPI WSPListen(
 
 int g_step = 0;
 
+int BeforeRecvFilter(SOCKET s,
+	LPWSABUF lpBuffers,
+	DWORD dwBufferCount,
+	LPDWORD lpNumberOfBytesRecvd,
+	LPDWORD lpFlags,
+	LPWSAOVERLAPPED lpOverlapped,
+	LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+	LPWSATHREADID lpThreadId,
+	LPINT lpErrno, 
+	LPBOOL lpCont)
+{
+	return NO_ERROR;
+}
+
+int AfterRecvFilter(SOCKET s,
+	LPWSABUF lpBuffers,
+	DWORD dwBufferCount,
+	LPDWORD lpNumberOfBytesRecvd,
+	LPDWORD lpFlags,
+	LPWSAOVERLAPPED lpOverlapped,
+	LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+	LPWSATHREADID lpThreadId,
+	LPINT lpErrno, 
+	int iNextRetutn)
+{
+	auto str = arrayToHexString((LPBYTE)lpBuffers->buf, min(lpBuffers->len, 32));
+	TRACE("AfterRecvFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, 32).c_str(), str.c_str());
+	return iNextRetutn;
+
+	unsigned char fake_pkt[] = {
+		0x55, 0xaa, 0x55, 0xaa, 0x39, 0x9c, 0x68, 0xbd, 0x01, 0x00, 0x38, 0x00, 0x00, 0x00, 0x23, 0x65,
+		0x46, 0x61, 0x77, 0x4a, 0x3c, 0x3c, 0x3c, 0x3c, 0x3c, 0x3d, 0x60, 0x3d, 0x68, 0x52, 0x75, 0x52,
+		0x3d, 0x3d, 0x7b, 0x3d, 0x6c, 0x54, 0x5f, 0x41, 0x62, 0x51, 0x4f, 0x55, 0x4e, 0x59, 0x72, 0x5d,
+		0x41, 0x59, 0x60, 0x4d, 0x6e, 0x56, 0x51, 0x51, 0x6b, 0x48, 0x5f, 0x40, 0x71, 0x47, 0x73, 0x59,
+		0x65, 0x4c, 0x4f, 0x70, 0x79, 0x21
+	};
+
+	if (dwBufferCount == 1) {
+		
+
+		//RecvTest(lpBuffers, lpNumberOfBytesRecvd);
+
+		//if (g_step == 1) { // 初步来看, 包是修改了, 但是可能修改的包不对
+
+		//	unsigned char tbuf[33];
+		//	LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
+		//	memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
+		//	tbuf[sizeof(tbuf) - 1] = 0;
+		//	auto str = arrayToHexString(tbuf, sizeof(tbuf));
+		//	// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
+		//	TRACE("WSPRecv(): BufLen = %d, Buf = %s\n", lpBuffers->len, str.c_str());
+		//	TRACE("WSPRecv() Replaced!!!!!\n");
+
+		//	memcpy(lpBuffers->buf, fake_pkt, sizeof(fake_pkt));
+		//	g_step = 0;
+		//	//if (lpErrno)
+		//	//	*lpErrno = NO_ERROR;
+		//	//return NO_ERROR;
+		//}
+	}
+
+	return iNextRetutn;
+}
+
 int
 WSPAPI WSPRecv(
 			   SOCKET s,
@@ -471,43 +535,16 @@ WSPAPI WSPRecv(
 			   LPINT lpErrno
 			   )
 {
-	TRACE("WSPRecv() Enter! dwBufferCount = %d, lpOverlapped = %p, lpCompletionRoutine = %p, Errno = %d\n", 
-		dwBufferCount, lpOverlapped, lpCompletionRoutine, *lpErrno);
+	TRACE("WSPRecv() Enter! dwBufferCount = %d, lpBuffers->len = %d, lpOverlapped = %p, lpCompletionRoutine = %p, Errno = %d\n", 
+		dwBufferCount, lpBuffers->len, lpOverlapped, lpCompletionRoutine, *lpErrno);
 	
-	unsigned char fake_pkt[] = {
-		0x55, 0xAA, 0x55, 0xAA, 0x39, 0x9C, 0x68, 0xBD, 0x01, 0x00,
-		0x38, 0x00, 0x00, 0x00, 0x23, 0x65, 0x46, 0x61, 0x77, 0x4A,
-		0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3D, 0x60, 0x3D, 0x68, 0x52,
-		0x75, 0x52, 0x3D, 0x3D, 0x7B, 0x3D, 0x6C, 0x54, 0x5F, 0x41,
-		0x62, 0x51, 0x4F, 0x55, 0x4E, 0x59, 0x72, 0x5D, 0x41, 0x59,
-		0x60, 0x4D, 0x6E, 0x56, 0x51, 0x51, 0x6B, 0x48, 0x5F, 0x40,
-		0x71, 0x47, 0x73, 0x59, 0x65, 0x4C, 0x4F, 0x70, 0x79, 0x21 };
+	BOOL cont = TRUE;
+	auto result = BeforeRecvFilter(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, lpOverlapped,
+		lpCompletionRoutine, lpThreadId, lpErrno, &cont);
+	if (!cont)
+		return result;
 
-	if (dwBufferCount == 1)
-		TRACE("WSPRecv(): Before Next WSPRecv. buf_len = %d\n", lpBuffers->len);
-
-	//if (dwBufferCount == 1) {
-	//	TRACE("WSPRecv(): Before Next WSPRecv. buf_len = %d\n", lpBuffers->len);
-	//	if (g_step == 1) {
-
-	//		unsigned char tbuf[33];
-	//		LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
-	//		memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
-	//		tbuf[sizeof(tbuf) - 1] = 0;
-	//		auto str = arrayToHexString(tbuf, sizeof(tbuf));
-	//		// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
-	//		TRACE("WSPRecv(): BufLen = %d, Buf = %s\n", lpBuffers->len, str.c_str());
-	//		TRACE("WSPRecv() Replaced!!!!!\n");
-
-	//		memcpy(lpBuffers->buf, fake_pkt, sizeof(fake_pkt));
-	//		g_step += 1;
-	//		//if (lpErrno)
-	//		//	*lpErrno = NO_ERROR;
-	//		//return NO_ERROR;
-	//	}
-	//}
-
-	auto result = g_NextProcTable.lpWSPRecv(
+	result = g_NextProcTable.lpWSPRecv(
 		s,
 		lpBuffers,
 		dwBufferCount,
@@ -518,26 +555,11 @@ WSPAPI WSPRecv(
 		lpThreadId,
 		lpErrno);
 
-	if (dwBufferCount == 1) {
-		TRACE("WSPRecv(): After Next WSPRecv. buf_len = %d\n", lpBuffers->len);
-		if (g_step == 1) { // 初步来看, 包是修改了, 但是可能修改的包不对
+	TRACE("WSPRecv(): After Next WSPRecv. lpBuffers->len = %d, lpNumberOfBytesRecvd = %d\n",
+		lpBuffers->len, *lpNumberOfBytesRecvd);
 
-			unsigned char tbuf[33];
-			LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
-			memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
-			tbuf[sizeof(tbuf) - 1] = 0;
-			auto str = arrayToHexString(tbuf, sizeof(tbuf));
-			// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
-			TRACE("WSPRecv(): BufLen = %d, Buf = %s\n", lpBuffers->len, str.c_str());
-			TRACE("WSPRecv() Replaced!!!!!\n");
-
-			memcpy(lpBuffers->buf, fake_pkt, sizeof(fake_pkt));
-			g_step += 1;
-			//if (lpErrno)
-			//	*lpErrno = NO_ERROR;
-			//return NO_ERROR;
-		}
-	}
+	result = AfterRecvFilter(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, lpOverlapped,
+		lpCompletionRoutine, lpThreadId, lpErrno, result);
 
 	TRACE("WSPRecv() Leave(%x)\n", result);
 	return result;
@@ -594,6 +616,77 @@ WSPAPI WSPSelect(
 		exceptfds, timeout, lpErrno);
 }
 
+int
+WSPAPI BeforeSendFilter(
+	SOCKET s,
+	LPWSABUF lpBuffers,
+	DWORD dwBufferCount,
+	LPDWORD lpNumberOfBytesSent,
+	DWORD dwFlags,
+	LPWSAOVERLAPPED lpOverlapped,
+	LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+	LPWSATHREADID lpThreadId,
+	LPINT lpErrno,
+	LPBOOL lpCont
+)
+{
+	auto str = arrayToHexString((LPBYTE)lpBuffers->buf, min(lpBuffers->len, 32));
+	TRACE("BeforeSendFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, 32).c_str(), str.c_str());
+	return NO_ERROR;
+
+	//LPCBYTE desthead = (LPCBYTE )"#*F^e";
+	/*LPCBYTE desthead = (LPCBYTE)"#*<<L<<l<<<<<z";
+	size_t headlen = strlen((const char*)desthead);
+	LPCBYTE dest = (LPCBYTE)"<<L<<l<<<<<z<>LQ<<<??<UA]MYoQqOsMgMbALV_LgPBmKU_XgGnhmWpi@ToAbM?aEZbMlMsQvUoMmM?MfWraLHBIDROAGU^ijQqarZO<gXoYKMBakPBaKVP`kPcY`VaQoQRqILs]>TcU`XcHpOpicFp`rNRduN@DnOaIiYni>LPydNPE>YSecICA@IBekVQ<lTp]UHPdpGoQqYBaAZa=JIpy@VRyLVQTpPCQhXrQHIoAcJQejR_MKWsUjLrXpHptmGrqFVPuCUbmkOaQ>U?IFXBmiROaINpMfToITFqaiNO=VFqYcIo]AZC\\nQCU@ZA]sWpyJZbMbIRaUVaEjIRA@Xp]fLqatQBATUrE?UoLoO_@kWPeeO`YbWByKRa]]W`QVNpHoW`qGMBe_Hq\\gTQAROAatLRuMPS]jO_=KJPErY_MfUop!";
+	size_t destlen = strlen((const char*)dest);*/
+
+	if (dwBufferCount == 1) {
+
+		if (lpBuffers->len == 1 && lpBuffers->buf[0] == '*') {
+			lpCont = FALSE;
+			return NO_ERROR;
+		}
+		//if (lpBuffers->len >= destlen + 2) {
+
+		//	// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
+		//	if (wildcard_memcmp((LPCBYTE)lpBuffers->buf, desthead, headlen) == 0) {
+
+		//		memcpy(lpBuffers->buf + 2, dest, destlen);
+		//		if (g_step == 0)
+		//			g_step += 1;
+		//		// "U\xaaU\xaa9\x9ch\xbd\x01\x008\x00\x00\x00#eFawJ<<<<<=`=hRuR=={=lT_AbQOUNYr]AY`MnVQQkH_@qGsYeLOpy!"
+		//		// "U\xaaU\xaa\xbadW\xb3\x01\x008\x00\x00\x00#O]qvg[{{{{y`=\RRkwdrnLVBQLQbUKPBPsPNynVQakR`q@QoQNUopy!"
+		//		TRACE("WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
+		//		//TRACE("WSPSend(): Leave \n");
+		//		//if (lpNumberOfBytesSent)
+		//		//	*lpNumberOfBytesSent = lpBuffers->len;
+		//		//if (lpErrno)
+		//		//	*lpErrno = NO_ERROR;
+		//		//return NO_ERROR;
+		//	}
+		//}
+	}
+
+	return NO_ERROR;
+}
+
+int
+WSPAPI AfterSendFilter(
+	SOCKET s,
+	LPWSABUF lpBuffers,
+	DWORD dwBufferCount,
+	LPDWORD lpNumberOfBytesSent,
+	DWORD dwFlags,
+	LPWSAOVERLAPPED lpOverlapped,
+	LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+	LPWSATHREADID lpThreadId,
+	LPINT lpErrno,
+	int nResult
+)
+{
+	return nResult;
+}
+
 // TODO: 修改发送接收函数, 打印出精准可比较的LOG
 // 从LOG输入来看, 可能同时进入, 所以必须支持多线程
 int
@@ -609,51 +702,20 @@ WSPAPI WSPSend(
 			   LPINT lpErrno
 			   )
 {
-	// ODS(L"WSPSend() Enter!\n");
-	/*sockaddr_in sa_in;
-	int addr_len = sizeof(sa_in);
-	getpeername(s, (sockaddr* )&sa_in, &addr_len);
-	if (sa_in.sin_family == AF_INET && ntohs(sa_in.sin_port) == 23) {
-		ODS(L"WSPSend() Dropped\n");
-		return 0;
-	}*/
+	TRACE("WSPSend() Enter! dwBufferCount = %d, lpBuffers->len = %d, lpOverlapped = %p, lpCompletionRoutine = %p, Errno = %d\n",
+		dwBufferCount, lpBuffers->len, lpOverlapped, lpCompletionRoutine, *lpErrno);
+	BOOL cont = TRUE;
 
-	TRACE("WSPSend() Enter! dwBufferCount = %d, lpOverlapped = %p, lpCompletionRoutine = %p, Errno = %d\n",
-		dwBufferCount, lpOverlapped, lpCompletionRoutine, *lpErrno);
+	auto result = BeforeSendFilter(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, 
+		lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno, &cont);
+	if (!cont)
+		return result;
 
-	LPCBYTE dest = (LPCBYTE )"#*F^e";
-	size_t len = strlen((const char* )dest);
-	
-	if (dwBufferCount == 1) {
-		
-		char tbuf[33];
-		LPCBYTE buf = (LPCBYTE)lpBuffers->buf;
-		memcpy(tbuf, buf, min(lpBuffers->len, sizeof(tbuf) - 1));
-		tbuf[sizeof(tbuf) - 1] = 0;
-		TRACE("WSPSend(): BufLen = %d, Buf = %s\n", lpBuffers->len, tbuf);
-
-		if (lpBuffers->len >= len) {
-			
-			// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
-			if (wildcard_memcmp((LPCBYTE)lpBuffers->buf, dest, len) == 0) {
-
-				if (g_step == 0)
-					g_step += 1;
-				// "U\xaaU\xaa9\x9ch\xbd\x01\x008\x00\x00\x00#eFawJ<<<<<=`=hRuR=={=lT_AbQOUNYr]AY`MnVQQkH_@qGsYeLOpy!"
-				// "U\xaaU\xaa\xbadW\xb3\x01\x008\x00\x00\x00#O]qvg[{{{{y`=\RRkwdrnLVBQLQbUKPBPsPNynVQakR`q@QoQNUopy!"
-				TRACE("WSPSend(): discard!!!!!!!!!!!!!!!!!!!!\n");
-				//TRACE("WSPSend(): Leave \n");
-				//if (lpNumberOfBytesSent)
-				//	*lpNumberOfBytesSent = lpBuffers->len;
-				//if (lpErrno)
-				//	*lpErrno = NO_ERROR;
-				//return NO_ERROR;
-			}
-		}
-	}
-
-	auto result = g_NextProcTable.lpWSPSend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
+	result = g_NextProcTable.lpWSPSend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
 		dwFlags, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
+
+	result = AfterSendFilter(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags,
+		lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno, result);
 
 	TRACE("WSPSend(): Leave(%x)\n", result);
 	return result;
