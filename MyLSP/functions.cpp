@@ -102,6 +102,30 @@
 //	return 0;
 //}
 
+void ReplaceSubstrings(std::string& str, const std::string& from, const std::string& to) {
+	if (from.empty()) return; // 防止空子字符串导致的无限循环
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length(); // 从替换后的位置继续搜索
+	}
+}
+
+void DumpBuffer(LPCSTR szPrefix, SOCKET s, LPWSABUF lpBuffers, size_t dumplen)
+{
+	sockaddr_in addr;
+	memset(&addr, 0, sizeof(addr));
+	int addrlen = sizeof(addr);
+	getpeername(s, (sockaddr*)&addr, &addrlen);
+
+	const int len = min(lpBuffers->len, dumplen);
+	auto str = arrayToHexString((LPBYTE)lpBuffers->buf, len);
+	auto dumpstr = std::string(lpBuffers->buf, len);
+	ReplaceSubstrings(dumpstr, "\n", "\\n");
+	TRACE("%s: [%s, %d] lpBuffers->buf = [%s] {%s}\n", szPrefix, inet_ntoa(addr.sin_addr), 
+		ntohs(addr.sin_port), dumpstr.c_str(), str.c_str());
+}
+
 SOCKET
 WSPAPI  WSPAccept(
 	SOCKET s,
@@ -483,8 +507,10 @@ int AfterRecvFilter(SOCKET s,
 	LPINT lpErrno, 
 	int iNextRetutn)
 {
-	auto str = arrayToHexString((LPBYTE)lpBuffers->buf, min(lpBuffers->len, 32));
-	TRACE("AfterRecvFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, 32).c_str(), str.c_str());
+	//const int tlen = min(lpBuffers->len, 32);
+	//auto str = arrayToHexString((LPBYTE)lpBuffers->buf, tlen);
+	//TRACE("AfterRecvFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, tlen).c_str(), str.c_str());
+	DumpBuffer("AfterRecvFilter()", s, lpBuffers, 32);
 	return iNextRetutn;
 
 	unsigned char fake_pkt[] = {
@@ -630,9 +656,11 @@ WSPAPI BeforeSendFilter(
 	LPBOOL lpCont
 )
 {
-	auto str = arrayToHexString((LPBYTE)lpBuffers->buf, min(lpBuffers->len, 32));
-	TRACE("BeforeSendFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, 32).c_str(), str.c_str());
-	return NO_ERROR;
+	DumpBuffer("BeforeSendFilter()", s, lpBuffers, 32);
+	//const int tlen = min(lpBuffers->len, 32);
+	//auto str = arrayToHexString((LPBYTE)lpBuffers->buf, tlen);
+	//TRACE("BeforeSendFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, tlen).c_str(), str.c_str());
+	//return NO_ERROR;
 
 	//LPCBYTE desthead = (LPCBYTE )"#*F^e";
 	/*LPCBYTE desthead = (LPCBYTE)"#*<<L<<l<<<<<z";
@@ -642,10 +670,18 @@ WSPAPI BeforeSendFilter(
 
 	if (dwBufferCount == 1) {
 
-		if (lpBuffers->len == 1 && lpBuffers->buf[0] == '*') {
+		if (lpBuffers->len == 40) {
+			sockaddr_in addr;
+			int addrlen = sizeof(addr);
+			if (getpeername(s, (sockaddr*)&addr, &addrlen) == 0) {
+				DumpBuffer("BeforeSendFilter() Dump2: ", s, lpBuffers, 40);
+			}
+		}
+
+		/*if (lpBuffers->len == 1 && lpBuffers->buf[0] == '*') {
 			lpCont = FALSE;
 			return NO_ERROR;
-		}
+		}*/
 		//if (lpBuffers->len >= destlen + 2) {
 
 		//	// TRACE("WSPSend(): Buf = %02x,%02x,%02x,%02x,%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);

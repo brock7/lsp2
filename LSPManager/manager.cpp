@@ -518,6 +518,23 @@ int test3()
 	return printf(arrayToHexString(buf, 4).c_str());
 }
 
+void ReplaceSubstrings(std::string& str, const std::string& from, const std::string& to) {
+	if (from.empty()) return; // 防止空子字符串导致的无限循环
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length(); // 从替换后的位置继续搜索
+	}
+}
+
+int test5()
+{
+	std::string str = "abcabc\n12312\n";
+	ReplaceSubstrings(str, "\n", "\\n");
+	printf("%s\n", str.c_str());
+	return 0;
+}
+
 int main(int argc, char* argv[])
 {
 	//return strlen(str);
