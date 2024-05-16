@@ -510,7 +510,7 @@ int AfterRecvFilter(SOCKET s,
 	//const int tlen = min(lpBuffers->len, 32);
 	//auto str = arrayToHexString((LPBYTE)lpBuffers->buf, tlen);
 	//TRACE("AfterRecvFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, tlen).c_str(), str.c_str());
-	DumpBuffer("AfterRecvFilter()", s, lpBuffers, 32);
+	DumpBuffer("AfterRecvFilter()", s, lpBuffers, 64);
 	return iNextRetutn;
 
 	unsigned char fake_pkt[] = {
@@ -656,7 +656,7 @@ WSPAPI BeforeSendFilter(
 	LPBOOL lpCont
 )
 {
-	DumpBuffer("BeforeSendFilter()", s, lpBuffers, 32);
+	DumpBuffer("BeforeSendFilter()", s, lpBuffers, 64);
 	//const int tlen = min(lpBuffers->len, 32);
 	//auto str = arrayToHexString((LPBYTE)lpBuffers->buf, tlen);
 	//TRACE("BeforeSendFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, tlen).c_str(), str.c_str());
@@ -670,13 +670,13 @@ WSPAPI BeforeSendFilter(
 
 	if (dwBufferCount == 1) {
 
-		if (lpBuffers->len == 40) {
-			sockaddr_in addr;
-			int addrlen = sizeof(addr);
-			if (getpeername(s, (sockaddr*)&addr, &addrlen) == 0) {
-				DumpBuffer("BeforeSendFilter() Dump2: ", s, lpBuffers, 40);
-			}
-		}
+		//if (lpBuffers->len == 40) {
+		//	sockaddr_in addr;
+		//	int addrlen = sizeof(addr);
+		//	if (getpeername(s, (sockaddr*)&addr, &addrlen) == 0) {
+		//		DumpBuffer("BeforeSendFilter() Dump2: ", s, lpBuffers, 40);
+		//	}
+		//}
 
 		/*if (lpBuffers->len == 1 && lpBuffers->buf[0] == '*') {
 			lpCont = FALSE;
