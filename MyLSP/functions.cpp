@@ -1,6 +1,7 @@
 #include "MyLSP.h"
 #include "debug.h"
 #include "utils.h"
+#include <ws2tcpip.h>
 
 //DWORD GetInformation()
 //{
@@ -111,19 +112,44 @@ void ReplaceSubstrings(std::string& str, const std::string& from, const std::str
 	}
 }
 
-void DumpBuffer(LPCSTR szPrefix, SOCKET s, LPWSABUF lpBuffers, size_t dumplen)
+void DumpBuffer(LPCSTR szPrefix, SOCKET s, LPWSABUF lpBuffers, size_t dumplen, BOOL bIsSend)
 {
 	sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	int addrlen = sizeof(addr);
 	getpeername(s, (sockaddr*)&addr, &addrlen);
+	u_short port = ntohs(addr.sin_port);
+	char ipaddr[64];
+	inet_ntop(addr.sin_family, &addr.sin_addr, ipaddr, sizeof(ipaddr));
 
 	const int len = min(lpBuffers->len, dumplen);
-	auto str = arrayToHexString((LPBYTE)lpBuffers->buf, len);
+	auto hexstr = arrayToHexString((LPBYTE)lpBuffers->buf, len);
 	auto dumpstr = std::string(lpBuffers->buf, len);
 	ReplaceSubstrings(dumpstr, "\n", "\\n");
-	TRACE("%s: [%s, %d] lpBuffers->buf = [%s] {%s}\n", szPrefix, inet_ntoa(addr.sin_addr), 
-		ntohs(addr.sin_port), dumpstr.c_str(), str.c_str());
+	if (lpBuffers->len >= 25 && lpBuffers->buf[0] == '#') {
+
+		std::string decoded_str;
+		if (bIsSend) {
+			int skip = 1;
+			if (lpBuffers->buf[1] >= '1' && lpBuffers->buf[1] <= '9')
+				skip = 2;
+			
+			auto decoded_tmp = decode6BitBytes(std::string(lpBuffers->buf + skip + 22, lpBuffers->buf + len - 1));
+			decoded_str = std::string(decoded_tmp.begin(), decoded_tmp.end());
+		}
+		else {
+			auto decoded_tmp = decode6BitBytes(std::string(lpBuffers->buf + 1 + 22, lpBuffers->buf + len - 1));
+			decoded_str = std::string(decoded_tmp.begin(), decoded_tmp.end());
+		}
+
+		//auto hexstr2 = arrayToHexString((LPBYTE)decoded_str.c_str(), len);
+
+		TRACE("%s: [%s, %d] lpBuffers->buf = [%s] {%s} {%s}\n", szPrefix, ipaddr,
+			port, dumpstr.c_str(), decoded_str.c_str(), hexstr.c_str());
+	} else {
+		TRACE("%s: [%s, %d] lpBuffers->buf = [%s] {%s}\n", szPrefix, ipaddr,
+			port, dumpstr.c_str(), hexstr.c_str());
+	}
 }
 
 SOCKET
@@ -510,7 +536,7 @@ int AfterRecvFilter(SOCKET s,
 	//const int tlen = min(lpBuffers->len, 32);
 	//auto str = arrayToHexString((LPBYTE)lpBuffers->buf, tlen);
 	//TRACE("AfterRecvFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, tlen).c_str(), str.c_str());
-	DumpBuffer("AfterRecvFilter()", s, lpBuffers, 64);
+	DumpBuffer("AfterRecvFilter()", s, lpBuffers, 64, FALSE);
 	return iNextRetutn;
 
 	unsigned char fake_pkt[] = {
@@ -656,7 +682,7 @@ WSPAPI BeforeSendFilter(
 	LPBOOL lpCont
 )
 {
-	DumpBuffer("BeforeSendFilter()", s, lpBuffers, 64);
+	DumpBuffer("BeforeSendFilter()", s, lpBuffers, 64, TRUE);
 	//const int tlen = min(lpBuffers->len, 32);
 	//auto str = arrayToHexString((LPBYTE)lpBuffers->buf, tlen);
 	//TRACE("BeforeSendFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, tlen).c_str(), str.c_str());
@@ -719,7 +745,13 @@ WSPAPI AfterSendFilter(
 	LPINT lpErrno,
 	int nResult
 )
-{
+{	
+	/*LPCSTR dest = "#5<L<<<<<<<<<mYL@<Bl<=<<LO]=M@@mLPQBM@UAM`Q=M@U?M`A=MPU=LO==MP@uLPIBM@A@LPA=M@A?LPE=LPU>LPE=M@UAM`IBMPA=M`A=J<!";
+	if (dwBufferCount == 1 && lpBuffers->len == strlen(dest)) {
+		nResult = g_NextProcTable.lpWSPSend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
+			dwFlags, lpOverlapped, lpCompletionRoutine, lpThreadId, lpErrno);
+	}*/
+
 	return nResult;
 }
 

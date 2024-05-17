@@ -68,3 +68,96 @@ int wildcard_memcmp(LPCBYTE src, LPCBYTE dst, size_t len, BYTE wildcard)
 
 	return 0;
 }
+
+std::string encoder6BitBuf(const std::vector<uint8_t>& src) {
+	size_t size = src.size();
+	size_t destLen = (size / 3) * 4 + 10;
+	std::string dest(destLen, '\0');
+	size_t destPos = 0;
+	int resetCount = 0;
+	uint8_t chMade = 0, chRest = 0;
+
+	for (size_t i = 0; i < size; ++i) {
+		if (destPos >= destLen) {
+			break;
+		}
+
+		chMade = (chRest | ((src[i] & 0xff) >> (2 + resetCount))) & 0x3f;
+		chRest = (((src[i] & 0xff) << (8 - (2 + resetCount))) >> 2) & 0x3f;
+
+		resetCount += 2;
+		if (resetCount < 6) {
+			dest[destPos] = chMade + 0x3c;
+			destPos++;
+		}
+		else {
+			if (destPos < destLen - 1) {
+				dest[destPos] = chMade + 0x3c;
+				destPos++;
+				dest[destPos] = chRest + 0x3c;
+				destPos++;
+			}
+			else {
+				dest[destPos] = chMade + 0x3c;
+				destPos++;
+			}
+			resetCount = 0;
+			chRest = 0;
+		}
+	}
+
+	if (resetCount > 0) {
+		dest[destPos] = chRest + 0x3c;
+		destPos++;
+	}
+
+	dest.resize(destPos);
+	return dest;
+}
+
+const uint8_t decode6BitMask[] = { 0xfc, 0xf8, 0xf0, 0xe0, 0xc0 };
+
+std::vector<uint8_t> decode6BitBytes(const std::string& src) {
+	size_t size = src.size();
+	std::vector<uint8_t> dest(size * 3 / 4, 0);
+	size_t destPos = 0;
+	int bitPos = 2;
+	int madeBit = 0;
+	uint8_t ch = 0;
+	uint8_t chCode = 0;
+	uint8_t tmp = 0;
+
+	for (size_t i = 0; i < size; ++i) {
+		if (src[i] - 0x3c >= 0) {
+			ch = src[i] - 0x3c;
+		}
+		else {
+			destPos = 0;
+			break;
+		}
+
+		if (destPos >= dest.size()) {
+			break;
+		}
+
+		if (madeBit + 6 >= 8) {
+			chCode = tmp | ((ch & 0x3f) >> (6 - bitPos));
+			dest[destPos] = chCode;
+			destPos++;
+			madeBit = 0;
+			if (bitPos < 6) {
+				bitPos += 2;
+			}
+			else {
+				bitPos = 2;
+				continue;
+			}
+		}
+
+		tmp = (ch << bitPos) & decode6BitMask[bitPos - 2];
+		madeBit += 8 - bitPos;
+	}
+
+	dest.resize(destPos);
+	return dest;
+}
