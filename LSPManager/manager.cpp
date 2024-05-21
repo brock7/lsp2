@@ -8,6 +8,9 @@
 #include <iomanip>  
 #include <string> 
 #include <vector>
+#include <tchar.h>
+
+#include <atlconv.h>
 
 static GUID ProviderGuid = {0x8a, 0x88b, 0x888c,{0x8a,0x8a,0x8a,0x8a,0x8a,0x8a,0x8a,0x8a}};
 
@@ -152,6 +155,7 @@ BOOL InstallProvider(WCHAR *pwszPathName)
 	//BOOL bFindRaw = FALSE;
 	for (int i=0; i<nProtocols; i++)
 	{
+		printf("%ws\n", pProtoInfo[i].szProtocol);
 		if (pProtoInfo[i].iAddressFamily == AF_INET)
 		{
 			/*if (!bFindUdp && pProtoInfo[i].iProtocol == IPPROTO_UDP)
@@ -285,6 +289,24 @@ BOOL RemoveProvider()
 		::WSCDeinstallProvider(&ProviderGuid, &dwError);
 	}
 	return TRUE;
+}
+
+void PrintProviders()
+{
+	LPWSAPROTOCOL_INFOW pProtoInfo;
+	int nProtocols;
+
+	pProtoInfo = GetProvider(&nProtocols);
+	for (int i = 0; i < nProtocols; i++)
+	{
+		USES_CONVERSION;
+		printf("%s\t%d\n", T2A(pProtoInfo[i].szProtocol), pProtoInfo[i].dwCatalogEntryId);
+		for (int j = 0; j < pProtoInfo[i].ProtocolChain.ChainLen; j++) {
+			printf("\tChainEntries[%d]: %d\n", j, pProtoInfo[i].ProtocolChain.ChainEntries[j]);
+		}
+	}
+
+	FreeProvider(pProtoInfo);
 }
 
 int wildcard_memcmp(LPCBYTE src, LPCBYTE dst, size_t len, BYTE wildcard = '*')
@@ -625,8 +647,6 @@ BYTE desthead[] = { 0x55, 0xaa, 0x55, 0xaa };
 
 BYTE pkt[] = { 0x55, 0xaa, 0x55, 0xaa, 0x39, 0x9c, 0x68, 0xbd, 0x1, 0x0, 0x38, 0x0, 0x0, 0x0, 0x23, 0x65, 0x46, 0x61, 0x77, 0x4a, 0x3c, 0x3c, 0x3c, 0x3c, 0x3c, 0x3d, 0x60, 0x3d, 0x68, 0x52, 0x75, 0x52, 0x3d, 0x3d, 0x7b, 0x3d, 0x6c, 0x54, 0x5f, 0x41, 0x62, 0x51, 0x4f, 0x55, 0x4e, 0x59, 0x72, 0x5d, 0x41, 0x59, 0x60, 0x4d, 0x6e, 0x56, 0x51, 0x51, 0x6b, 0x48, 0x5f, 0x40, 0x71, 0x47, 0x73, 0x59, 0x65, 0x4c, 0x4f, 0x70, 0x79, 0x21, };
 
-
-
 int test5()
 {
 	auto r = decode6BitBytes("HO@mHRDkHODoHODo");
@@ -646,9 +666,15 @@ int main(int argc, char* argv[])
 	//return get_mac()
 	//return test();
 
-	if (argc > 1 && stricmp(argv[1], "remove") == 0)
-		RemoveLSP();
-	else
-		InstallLSP();
+	if (argc > 1) {
+		if (stricmp(argv[1], "remove") == 0)
+			RemoveLSP();
+		else if (stricmp(argv[1], "install") == 0)
+			InstallLSP();
+		else
+			PrintProviders();
+	} else
+		PrintProviders();
+		
 	return 0;
 }
