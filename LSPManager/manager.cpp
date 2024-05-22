@@ -155,7 +155,7 @@ BOOL InstallProvider(WCHAR *pwszPathName)
 	//BOOL bFindRaw = FALSE;
 	for (int i=0; i<nProtocols; i++)
 	{
-		printf("%ws\n", pProtoInfo[i].szProtocol);
+		//printf("%ws\n", pProtoInfo[i].szProtocol);
 		if (pProtoInfo[i].iAddressFamily == AF_INET)
 		{
 			/*if (!bFindUdp && pProtoInfo[i].iProtocol == IPPROTO_UDP)
@@ -215,13 +215,16 @@ BOOL InstallProvider(WCHAR *pwszPathName)
 		}
 		else
 		{
-			for (int j = OriginalProtocolInfo[i].ProtocolChain.ChainLen; j>0; j--)
+			for (int j = OriginalProtocolInfo[i].ProtocolChain.ChainLen; j > 0; j--)
 			{
-				OriginalProtocolInfo[i].ProtocolChain.ChainEntries[j] = OriginalProtocolInfo[i].ProtocolChain.ChainEntries[j-1];
+				OriginalProtocolInfo[i].ProtocolChain.ChainEntries[j] = OriginalProtocolInfo[i].ProtocolChain.ChainEntries[j - 1];
 			}
 		}
 		OriginalProtocolInfo[i].ProtocolChain.ChainLen ++;
 		OriginalProtocolInfo[i].ProtocolChain.ChainEntries[0] = dwLayeredCatalogId; 
+		//OriginalProtocolInfo[i].ProtocolChain.ChainEntries[1] = dwOrigCatalogId[i];
+		//OriginalProtocolInfo[i].ProtocolChain.ChainEntries[0] = dwLayeredCatalogId;
+		//OriginalProtocolInfo[i].ProtocolChain.ChainLen = 2;
 	}
 
 	GUID ProviderChainGuid;
@@ -300,7 +303,7 @@ void PrintProviders()
 	for (int i = 0; i < nProtocols; i++)
 	{
 		USES_CONVERSION;
-		printf("%s\t%d\n", T2A(pProtoInfo[i].szProtocol), pProtoInfo[i].dwCatalogEntryId);
+		printf("%s: %d\n", T2A(pProtoInfo[i].szProtocol), pProtoInfo[i].dwCatalogEntryId);
 		for (int j = 0; j < pProtoInfo[i].ProtocolChain.ChainLen; j++) {
 			printf("\tChainEntries[%d]: %d\n", j, pProtoInfo[i].ProtocolChain.ChainEntries[j]);
 		}
