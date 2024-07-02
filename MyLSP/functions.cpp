@@ -137,8 +137,8 @@ void DumpBuffer(LPCSTR szPrefix, SOCKET s, LPWSABUF lpBuffers, size_t dumplen, B
 				skip = 2;
 		}
 
-		auto head = decode6BitBytes(std::string(lpBuffers->buf + skip, lpBuffers->buf + skip + head_len - 1));
-		auto body = decode6BitBytes(std::string(lpBuffers->buf + skip + head_len, lpBuffers->buf + len - 1));
+		auto head = Decode6BitBuf(std::string(lpBuffers->buf + skip, lpBuffers->buf + skip + head_len - 1));
+		auto body = Decode6BitBuf(std::string(lpBuffers->buf + skip + head_len, lpBuffers->buf + len - 1));
 		auto body_str = std::string(body.begin(), body.end());
 		auto head_str = arrayToHexString(head.data(), head.size());
 		uint8_t* head_data = head.data();
@@ -584,7 +584,7 @@ int AfterRecvFilter(SOCKET s,
 0xfc, 0x4a, 0x1b, 0xab, 0x8a, 0xb5, 0x9f, 0x73, 0xed, 0xcd, 0x54, 0x55, 0x96, 0x4b, 0xf1, 0xa9, 0x4f, 0x64, 0x76, 0x57, 0x7b, 0x66, 0xbe, 0xc4, 0x67, 0x46, 0x35, 0x1f, 0x5e, 0xdc, 0x71, 0xd9, 0x57, 0x5d, 0xeb, 0xa2, 0x1d, 0xcd, 0xe, 0xc5, 0x59, 0xb5, 0x7f, 0x47, 0xb9, 0xde, 0x18, 0x62, 0xfd, 0x8b, 0x47, 0xbb, 0x4d, 0x87, 0x37, 0x45, 0x18, 0xbd, 0xf4, 0x10, 0x6b, 0x17, 0xc6, 0x82, 0x3e, 0x95, 0x6c, 0x9f, 0xd5, 0x1a, 0x79, 0x56, 0x34, 0xff, 0xea, 0xe8, 0x2b, 0x87, 0xe7, 0x82, 0xdb, 0x9e, 0x1c, 0xa1, 0x85, 0xee, 0xc9, 0xa1, 0x5d, 0x15, 0x76, 0x8a, 0xcf, 0xdb, 0xde, 0x3e, 0x9a, 0x7a, 0x7d, 0xbb, 0xfc, 0x90, 0x6, 0x23, 0x2c, 0xbf, 0xe5, 0x15, 0xb9, };
 	if (dwBufferCount == 1) {
 		
-		bool hitted = false;
+		/*bool hitted = false;
 		if (memcmp(lpBuffers->buf, desthead, 4) == 0) {
 			hitted = true;
 			g_step += 1;
@@ -606,7 +606,7 @@ int AfterRecvFilter(SOCKET s,
 			lpBuffers->buf = (LPSTR)GlobalAlloc(GPTR, sizeof(pkt5));
 			lpBuffers->len = sizeof(pkt5);
 			memcpy(lpBuffers->buf, pkt5, sizeof(pkt5));
-		}
+		}*/
 
 		//RecvTest(lpBuffers, lpNumberOfBytesRecvd);
 
@@ -744,7 +744,7 @@ WSPAPI BeforeSendFilter(
 	LPBOOL lpCont
 )
 {
-	DumpBuffer("BeforeSendFilter()", s, lpBuffers, 64, TRUE);
+	DumpBuffer("BeforeSendFilter()", s, lpBuffers, 500, TRUE);
 	//const int tlen = min(lpBuffers->len, 32);
 	//auto str = arrayToHexString((LPBYTE)lpBuffers->buf, tlen);
 	//TRACE("BeforeSendFilter(): lpBuffers->buf = [%s]{%s}\n", std::string(lpBuffers->buf, tlen).c_str(), str.c_str());
@@ -765,11 +765,11 @@ WSPAPI BeforeSendFilter(
 	BYTE dest[] = "<<<<<<<<<<=LM\\<<<<<><<!";
 	if (dwBufferCount == 1) {
 		
-		if (g_step2 == 0 && wildcard_memcmp((LPCBYTE)lpBuffers->buf, desthead, headlen) == 0) {
-			TRACE("BeforeSendFilter(): REPLACED!!!\n")
-			memcpy(lpBuffers->buf + 2, dest, sizeof(dest));
-			g_step2 += 1;
-		}
+		//if (g_step2 == 0 && wildcard_memcmp((LPCBYTE)lpBuffers->buf, desthead, headlen) == 0) {
+		//	TRACE("BeforeSendFilter(): REPLACED!!!\n")
+		//	memcpy(lpBuffers->buf + 2, dest, sizeof(dest));
+		//	g_step2 += 1;
+		//}
 
 		//if (lpBuffers->len == 40) {
 		//	sockaddr_in addr;

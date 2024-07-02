@@ -30,13 +30,13 @@ inline void WriteLog(const char* str)
 
 #define ODS1(szOut, var)\
 {						\
-	char sz[1024];		\
+	char sz[4096];		\
 	sprintf_s(sz, szOut, var);\
 	WriteLog(sz);\
 }
 
 #define TRACE(fmt, ...)	{ \
-	char sz[1024];		\
+	char sz[4096];		\
 	sprintf_s(sz, fmt, ##__VA_ARGS__); \
 	WriteLog(sz);\
 }

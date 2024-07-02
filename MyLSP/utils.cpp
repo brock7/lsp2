@@ -69,7 +69,17 @@ int wildcard_memcmp(LPCBYTE src, LPCBYTE dst, size_t len, BYTE wildcard)
 	return 0;
 }
 
-std::string encoder6BitBuf(const std::vector<uint8_t>& src) {
+void MakeDefaultMsg(DefaultMessage* out, WORD ident, WORD param, WORD tag, DWORD nSessionID, DWORD recog, WORD series)
+{
+	out->recog = recog; // *(_DWORD *)a7 = a5;
+	out->nSessionID = nSessionID;	// *(_DWORD *)(a7 + 4) = a4;
+	out->ident = ident; // *(_WORD *)(a7 + 8) = a1;
+	out->param = param; // *(_WORD *)(a7 + 10) = a2;
+	out->tag = tag; // *(_WORD *)(a7 + 12) = a3;
+	out->series = series; // *(_WORD *)(a7 + 14) = a6;
+}
+
+std::string Encode6BitBuf(const std::vector<uint8_t>& src) {
 	size_t size = src.size();
 	size_t destLen = (size / 3) * 4 + 10;
 	std::string dest(destLen, '\0');
@@ -117,7 +127,7 @@ std::string encoder6BitBuf(const std::vector<uint8_t>& src) {
 
 const uint8_t decode6BitMask[] = { 0xfc, 0xf8, 0xf0, 0xe0, 0xc0 };
 
-std::vector<uint8_t> decode6BitBytes(const std::string& src) {
+std::vector<uint8_t> Decode6BitBuf(const std::string& src) {
 	size_t size = src.size();
 	std::vector<uint8_t> dest(size * 3 / 4, 0);
 	size_t destPos = 0;
